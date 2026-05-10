@@ -28,6 +28,7 @@ ONLINE_MSG = f"""
 # actual code
 async def offline_to_online():
     global online
+    global last_msg_id
     online = True
     await client.change_presence(
         status=discord.Status.online
@@ -42,6 +43,7 @@ async def offline_to_online():
 
 async def online_to_offline():
     global online
+    global last_msg_id
     online = False
     await client.change_presence(
         status=discord.Status.dnd,
@@ -57,6 +59,7 @@ async def online_to_offline():
 
 class Client(discord.Client):
     async def on_ready(self):
+        global online
         print(f"{self.user.name} online")
         self.log_channel:discord.TextChannel = self.get_channel(LOG_CHANNEL_ID)
         member = self.log_channel.guild.get_member(TRACKED_USER_ID)
@@ -67,7 +70,6 @@ class Client(discord.Client):
 
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
         global online
-        global last_msg_id
         
         if self.log_channel and before.id == TRACKED_USER_ID:
             if before.status.name != "offline" and after.status.name == "offline" and online:
