@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import discord
 import json
+import time
 import os
 
 load_dotenv()
@@ -12,10 +13,11 @@ LOG_CHANNEL_ID = 1501730488631693415 # #status on ONT
 ROLE_PING_ID = 1501730555782496369 # @status on ONT
 
 OFFLINE_MSG = f"""
-# :warning: ¡Los servidores están offline!
+# <:EK_bad_servers:1502482565968302080> ¡Los servidores están offline!
 :flag_us: The Servers went offline!
 :flag_br: Os Servidores ficaram offline!
 -# <@&{ROLE_PING_ID}>
+$time$
 """
 
 ONLINE_MSG = f"""
@@ -23,6 +25,7 @@ ONLINE_MSG = f"""
 :flag_us: The Servers are back!
 :flag_br: Os Servidores voltaram!
 -# <@&{ROLE_PING_ID}>
+$time$
 """
 
 # actual code
@@ -37,7 +40,7 @@ async def offline_to_online():
         await client.get_channel(LOG_CHANNEL_ID).get_partial_message(last_msg_id).delete()
     except:
         pass
-    new_msg = await client.log_channel.send(ONLINE_MSG)
+    new_msg = await client.log_channel.send(ONLINE_MSG.replace("$time$", f"<t:{int(time.time())}:R>"))
     last_msg_id = new_msg.id
     db.update({
         "last_msg_id": last_msg_id,
@@ -57,7 +60,7 @@ async def online_to_offline():
         await client.get_channel(LOG_CHANNEL_ID).get_partial_message(last_msg_id).delete()
     except:
         pass
-    new_msg = await client.log_channel.send(OFFLINE_MSG)
+    new_msg = await client.log_channel.send(OFFLINE_MSG.replace("$time$", f"<t:{int(time.time())}:R>"))
     last_msg_id = new_msg.id
     db.update({
         "last_msg_id": last_msg_id,
