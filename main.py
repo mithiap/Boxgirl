@@ -1,8 +1,12 @@
+from dotenv import load_dotenv
 import discord
 import json
+import os
+
+load_dotenv()
 
 # change zeez
-TOKEN = "oootoken"
+TOKEN = os.getenv("TOKEN")
 TRACKED_USER_ID = 518021652471349250 # Mithia
 LOG_CHANNEL_ID = 1501730488631693415 # #status on ONT
 ROLE_PING_ID = 1501730555782496369 # @status on ONT
