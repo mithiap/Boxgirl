@@ -26,45 +26,55 @@ ONLINE_MSG = f"""
 """
 
 # actual code
+def offline_to_online():
+    global online
+    online = True
+    client.change_presence(
+        status=discord.Status.online
+    )
+    new_msg = client.log_channel.send(ONLINE_MSG)
+    last_msg_id = new_msg.id
+    db.update({
+        "last_msg_id": last_msg_id,
+        "online":online
+    })
+    json.dump(db, open("./db.json", "w"), indent=4)
+
+def online_to_offline():
+    global online
+    online = False
+    client.change_presence(
+        status=discord.Status.dnd,
+        activity=discord.Game("Servers are down, welp")
+    )
+    new_msg = client.log_channel.send(OFFLINE_MSG)
+    last_msg_id = new_msg.id
+    db.update({
+        "last_msg_id": last_msg_id,
+        "online":online
+    })
+    json.dump(db, open("./db.json", "w"), indent=4)
+
 class Client(discord.Client):
     async def on_ready(self):
         print(f"{self.user.name} online")
         self.log_channel:discord.TextChannel = self.get_channel(LOG_CHANNEL_ID)
+        member = self.log_channel.guild.get_member(TRACKED_USER_ID)
+        if member.status.name != "offline" and not online:
+            offline_to_online()
+        elif member.status.name == "offline" and online:
+            online_to_offline()
 
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
         global online
         global last_msg_id
-        changed = False
         
         if self.log_channel and before.id == TRACKED_USER_ID:
             if before.status.name != "offline" and after.status.name == "offline" and online:
-                online = False
-                await self.change_presence(
-                    status=discord.Status.dnd,
-                    activity=discord.Game("Servers are down, welp")
-                )
-                new_msg = await self.log_channel.send(OFFLINE_MSG)
-                changed = True
+                online_to_offline()
                 
             elif before.status.name == "offline" and after.status.name != "offline" and not online:
-                online = True
-                await self.change_presence(
-                            status=discord.Status.online
-                )
-                new_msg = await self.log_channel.send(ONLINE_MSG)
-                changed = True
-                
-            if changed:
-                try:
-                    await self.log_channel.get_partial_message(last_msg_id).delete()
-                except:
-                    pass
-                last_msg_id = new_msg.id
-                db.update({
-                    "last_msg_id": last_msg_id,
-                    "online":online
-                })
-                json.dump(db, open("./db.json", "w"), indent=4)
+                offline_to_online()
 
 
 intents = discord.Intents.default()
