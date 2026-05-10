@@ -7,18 +7,10 @@ import os
 load_dotenv()
 
 # change zeez
+TRACKED_USER_ID = 518021652471349250
+LOG_CHANNEL_ID = 1501730488631693415
+ROLE_PING_ID = 1501730555782496369
 TOKEN = os.getenv("TOKEN")
-TRACKED_USER_ID = 518021652471349250 # Mithia
-LOG_CHANNEL_ID = 1501730488631693415 # #status on ONT
-ROLE_PING_ID = 1501730555782496369 # @status on ONT
-
-OFFLINE_MSG = f"""
-# <:EK_bad_servers:1502482565968302080> ¡Los servidores están offline!
-:flag_us: The Servers went offline!
-:flag_br: Os Servidores ficaram offline!
--# <@&{ROLE_PING_ID}>
-$time$
-"""
 
 ONLINE_MSG = f"""
 # :white_check_mark: ¡Los servidores han vuelto!
@@ -26,6 +18,13 @@ ONLINE_MSG = f"""
 :flag_br: Os Servidores voltaram!
 -# <@&{ROLE_PING_ID}>
 $time$
+"""
+
+OFFLINE_MSG = f"""
+# <:EK_bad_servers:1502482565968302080> ¡Los servidores están offline! $time$
+:flag_us: The Servers went offline!
+:flag_br: Os Servidores ficaram offline!
+-# <@&{ROLE_PING_ID}>
 """
 
 # actual code
