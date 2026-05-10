@@ -33,6 +33,10 @@ async def offline_to_online():
     await client.change_presence(
         status=discord.Status.online
     )
+    try:
+        await client.get_channel(LOG_CHANNEL_ID).fetch_message(last_msg_id).delete()
+    except:
+        pass
     new_msg = await client.log_channel.send(ONLINE_MSG)
     last_msg_id = new_msg.id
     db.update({
@@ -49,6 +53,10 @@ async def online_to_offline():
         status=discord.Status.dnd,
         activity=discord.Game("Servers are down, welp")
     )
+    try:
+        await client.get_channel(LOG_CHANNEL_ID).fetch_message(last_msg_id).delete()
+    except:
+        pass
     new_msg = await client.log_channel.send(OFFLINE_MSG)
     last_msg_id = new_msg.id
     db.update({
