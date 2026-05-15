@@ -24,11 +24,7 @@ OFFLINE_MSG = f"""
 # <:EK_bad_servers:1502482565968302080> ¡Los Servidores están offline!
 :flag_us: The Servers are offline!
 :flag_br: Os Servidores estão offline!
-<<<<<<< HEAD
--# <@&{ROLE_PING_ID}> - $time$
-=======
 -#  <@&{ROLE_PING_ID}> - $time$
->>>>>>> 29c56e8e2cf9854d1353cae103445f7b0625c3d4
 """
 
 # actual code
