@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+import asyncio
 import discord
 import json
 import time
@@ -13,18 +14,17 @@ ROLE_PING_ID = 1501730555782496369
 TOKEN = os.getenv("TOKEN")
 
 ONLINE_MSG = f"""
-# :white_check_mark: ¡Los servidores han vuelto!
+# :white_check_mark: ¡Los Servidores han vuelto!
 :flag_us: The Servers are back!
 :flag_br: Os Servidores voltaram!
--# <@&{ROLE_PING_ID}>
-$time$
+-# <@&{ROLE_PING_ID}> - $time$
 """
 
 OFFLINE_MSG = f"""
-# <:EK_bad_servers:1502482565968302080> ¡Los servidores están offline! $time$
-:flag_us: The Servers went offline!
-:flag_br: Os Servidores ficaram offline!
--# <@&{ROLE_PING_ID}>
+# <:EK_bad_servers:1502482565968302080> ¡Los Servidores están offline!
+:flag_us: The Servers are offline!
+:flag_br: Os Servidores estão offline!
+-# <@&{ROLE_PING_ID}> - $time$
 """
 
 # actual code
@@ -37,6 +37,7 @@ async def offline_to_online():
     )
     try:
         await client.get_channel(LOG_CHANNEL_ID).get_partial_message(last_msg_id).delete()
+        await asyncio.sleep(1)
     except:
         pass
     new_msg = await client.log_channel.send(ONLINE_MSG.replace("$time$", f"<t:{int(time.time())}:R>"))
@@ -57,6 +58,7 @@ async def online_to_offline():
     )
     try:
         await client.get_channel(LOG_CHANNEL_ID).get_partial_message(last_msg_id).delete()
+        await asyncio.sleep(1)
     except:
         pass
     new_msg = await client.log_channel.send(OFFLINE_MSG.replace("$time$", f"<t:{int(time.time())}:R>"))
