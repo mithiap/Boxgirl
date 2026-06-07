@@ -120,18 +120,25 @@ client = Client("", intents=intents)
 client.log_channel = None
 
 @client.tree.command(name="toggle", description="Enable or disable tracking the EK-Bot's status")
-async def toggle_track(interaction:discord.Interaction):
+async def toggle_track(interaction:discord.Interaction, enable:bool):
     global track
     if interaction.user.guild_permissions.administrator:
-        if track:
+        if enable == False:
             track = False
+            await client.change_presence(
+                status=discord.Status.idle,
+                activity=discord.Game("Servers are not being tracked")
+            )
             await interaction.response.send_message(":warning: Tracking has been **disabled**.")
         else:
             track = True
+            await client.change_presence(
+                status=discord.Status.online
+            )
             await interaction.response.send_message(":white_check_mark: Tracking has been **enabled**.")
         update_db()
     else:
-        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="update", description="Update the variables from vars.json without needing to restart the bot")
 async def update_vars_cmd(interaction:discord.Interaction):
@@ -139,7 +146,7 @@ async def update_vars_cmd(interaction:discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         await interaction.response.send_message(":white_check_mark: Variables updated!")
     else:
-        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="catch-up", description="Check EK-Bot's status and update the message accordingly")
 async def catch_up_cmd(interaction:discord.Interaction):
@@ -155,7 +162,7 @@ async def catch_up_cmd(interaction:discord.Interaction):
         else:
             await interaction.response.send_message(":warning: EK-Bot's status is the same as the last update, no changes were made.")
     else:
-        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 db:dict = json.load(open("./db.json", "r"))
 last_msg_id = db["last_msg_id"]
