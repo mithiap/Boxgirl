@@ -125,21 +125,21 @@ async def toggle_track(interaction:discord.Interaction):
     if interaction.user.guild_permissions.administrator:
         if track:
             track = False
-            await interaction.response.send_message(":warning: Tracking has been disabled.")
+            await interaction.response.send_message(":warning: Tracking has been **disabled**.")
         else:
             track = True
-            await interaction.response.send_message(":white_check_mark: Tracking has been enabled.")
+            await interaction.response.send_message(":white_check_mark: Tracking has been **enabled**.")
         update_db()
     else:
-        await interaction.response.send_message(":no_entry: You don't have permission to use this command.", ephemeral=True)
+        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
 
 @client.tree.command(name="update", description="Update the variables from vars.json without needing to restart the bot")
 async def update_vars_cmd(interaction:discord.Interaction):
     update_vars()
     if interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message(":white_check_mark: Variables updated.")
+        await interaction.response.send_message(":white_check_mark: Variables updated!")
     else:
-        await interaction.response.send_message(":no_entry: You don't have permission to use this command.", ephemeral=True)
+        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
 
 @client.tree.command(name="catch-up", description="Check EK-Bot's status and update the message accordingly")
 async def catch_up_cmd(interaction:discord.Interaction):
@@ -148,14 +148,14 @@ async def catch_up_cmd(interaction:discord.Interaction):
         member = client.log_channel.guild.get_member(tracked_user_id)
         if member.status.name != "offline" and not online:
             await offline_to_online()
-            await interaction.response.send_message(":white_check_mark: EK-Bot is now online, updated the message.")
+            await interaction.response.send_message(":white_check_mark: EK-Bot is now online, I've updated my message.")
         elif member.status.name == "offline" and online:
             await online_to_offline()
-            await interaction.response.send_message(":white_check_mark: EK-Bot is now offline, updated the message.")
+            await interaction.response.send_message(":white_check_mark: EK-Bot is now offline, I've updated my message.")
         else:
-            await interaction.response.send_message(":warning: EK-Bot's status is the same as the last update, no changes made.")
+            await interaction.response.send_message(":warning: EK-Bot's status is the same as the last update, no changes were made.")
     else:
-        await interaction.response.send_message(":no_entry: You don't have permission to use this command.", ephemeral=True)
+        await interaction.response.send_message(f""":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.""", ephemeral=True)
 
 db:dict = json.load(open("./db.json", "r"))
 last_msg_id = db["last_msg_id"]
