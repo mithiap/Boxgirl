@@ -12,7 +12,7 @@ load_dotenv()
 variables:dict = json.load(open("./vars.json", "r"))
 
 tracked_user_id:int       = variables["tracked_user_id"]
-log_channel_id:int        = variables["banner_log_channel_id"]
+log_channel_id:int        = variables["log_channel_id"]
 role_ping_id:int          = variables["role_ping_id"]
 banner_cmd_guild_id:int   = variables["banner_cmd_guild_id"]
 banner_log_channel_id:int = variables["banner_log_channel_id"]
@@ -79,7 +79,7 @@ def update_vars():
 
     variables = json.load(open("./vars.json", "r"))
     tracked_user_id       = variables["tracked_user_id"]
-    log_channel_id        = variables["banner_log_channel_id"]
+    log_channel_id        = variables["log_channel_id"]
     role_ping_id          = variables["role_ping_id"]
     banner_cmd_guild_id   = variables["banner_cmd_guild_id"]
     banner_log_channel_id = variables["banner_log_channel_id"]
