@@ -5,13 +5,30 @@ import discord
 import json
 import time
 import os
+import io
 
 load_dotenv()
 
 variables:dict = json.load(open("./vars.json", "r"))
-tracked_user_id = variables["tracked_user_id"]
-log_channel_id = variables["log_channel_id"]
-role_ping_id = variables["role_ping_id"]
+
+tracked_user_id:int       = variables["tracked_user_id"]
+log_channel_id:int        = variables["banner_log_channel_id"]
+role_ping_id:int          = variables["role_ping_id"]
+banner_cmd_guild_id:int   = variables["banner_cmd_guild_id"]
+banner_log_channel_id:int = variables["banner_log_channel_id"]
+banner_admins:list        = variables["banner_admins"]
+banner_allowed_roles:list = variables["banner_allowed_roles"]
+
+db:dict = json.load(open("./db.json", "r"))
+
+last_msg_id:int         = db["last_msg_id"]
+online:bool             = db["online"]
+track:bool              = db["track"]
+banner_change_date:int  = db["banner_change_date"]
+banner_changer_id:int   = db["banner_changer_id"]
+banner_changer_name:str = db["banner_changer_name"]
+banner_banned:list      = db["banner_banned"]
+
 TOKEN = os.getenv("TOKEN")
 
 # ==================== change zeez ====================
@@ -26,7 +43,7 @@ OFFLINE_MSG = f"""
 # <:EK_bad_servers:1502482565968302080> ¡Los Servidores están offline!
 :flag_us: The Servers are offline!
 :flag_br: Os Servidores estão offline!
--#  <@&{role_ping_id}> - $time$
+-# <@&{role_ping_id}> - $time$
 """
 
 # actual code
@@ -35,10 +52,19 @@ def update_db():
     global last_msg_id
     global online
     global track
+    global banner_change_date
+    global banner_changer_id
+    global banner_changer_name
+    global banner_banned
+
     db.update({
         "last_msg_id": last_msg_id,
         "online":online,
-        "track": track
+        "track": track,
+        "banner_change_date": banner_change_date,
+        "banner_changer_id": banner_changer_id,
+        "banner_changer_name": banner_changer_name,
+        "banner_banned": banner_banned
     })
     json.dump(db, open("./db.json", "w"), indent=4)
 
@@ -46,11 +72,19 @@ def update_vars():
     global tracked_user_id
     global log_channel_id
     global role_ping_id
+    global banner_cmd_guild_id
+    global banner_log_channel_id
+    global banner_admins
+    global banner_allowed_roles
 
-    variables:dict = json.load(open("./vars.json", "r"))
-    tracked_user_id = variables["tracked_user_id"]
-    log_channel_id = variables["log_channel_id"]
-    role_ping_id = variables["role_ping_id"]
+    variables = json.load(open("./vars.json", "r"))
+    tracked_user_id       = variables["tracked_user_id"]
+    log_channel_id        = variables["banner_log_channel_id"]
+    role_ping_id          = variables["role_ping_id"]
+    banner_cmd_guild_id   = variables["banner_cmd_guild_id"]
+    banner_log_channel_id = variables["banner_log_channel_id"]
+    banner_admins         = variables["banner_admins"]
+    banner_allowed_roles  = variables["banner_allowed_roles"]
 
 async def offline_to_online():
     global online
@@ -92,6 +126,7 @@ class Client(commands.Bot):
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         member = self.log_channel.guild.get_member(tracked_user_id)
         await self.tree.sync()
+        await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
         if member.status.name != "offline" and not online:
             await offline_to_online()
         elif member.status.name == "offline" and online:
@@ -140,14 +175,6 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="update", description="Update the variables from vars.json without needing to restart the bot")
-async def update_vars_cmd(interaction:discord.Interaction):
-    update_vars()
-    if interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message(":white_check_mark: Variables updated!")
-    else:
-        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
-
 @client.tree.command(name="catch-up", description="Check EK-Bot's status and update the message accordingly")
 async def catch_up_cmd(interaction:discord.Interaction):
     global online
@@ -164,9 +191,108 @@ async def catch_up_cmd(interaction:discord.Interaction):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-db:dict = json.load(open("./db.json", "r"))
-last_msg_id = db["last_msg_id"]
-online = db["online"]
-track = db["track"]
+@client.tree.command(name="set-banner", description="Set the banner for the bot")
+async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachment):
+    global banner_change_date
+    global banner_changer_id
+    global banner_changer_name
+    global banner_banned
+    global banner_log_channel_id
+
+    if interaction.user.id in banner_admins or any(role.id in banner_allowed_roles for role in interaction.user.roles):
+        if interaction.user.id in banner_banned:
+            await interaction.response.send_message(":x: You are banned from changing the banner.", ephemeral=True)
+            return
+
+        if interaction.user.id == banner_changer_id:
+            await interaction.response.send_message(":x: You can't change the banner twice in a row.", ephemeral=True)
+            return
+    
+        if not interaction.user.id in banner_admins:
+            if int(time.time()) - banner_change_date < 3600: # 1 hour cooldown for non-admins
+                remaining_time = 3600 - (int(time.time()) - banner_change_date)
+                await interaction.response.send_message(f":x: The banner can only be changed once every hour. Please wait {remaining_time//60} minutes and {remaining_time%60} seconds.", ephemeral=True)
+                return
+
+        if not banner.content_type or not banner.content_type.startswith("image/"):
+            await interaction.response.send_message(":x: Please upload a valid image file.", ephemeral=True)
+            return
+    
+        if banner.size > 10 * 1024 * 1024:
+            await interaction.response.send_message(":x: The image file size must be less than 10 MB.", ephemeral=True)
+            return
+
+        try:
+            await interaction.response.defer()
+            img_bytes = await banner.read()
+            await client.user.edit(banner=img_bytes)
+
+            banner_log_channel = client.get_channel(banner_log_channel_id)
+    
+            image_stream = io.BytesIO(img_bytes)
+
+            filename = banner.filename.replace(" ", "").replace("_", "")
+            file = discord.File(fp=image_stream, filename=filename)
+
+            embed = discord.Embed(title="Banner Updated", description=f"**Changed by:** {interaction.user.name} [{interaction.user.id}]\n**Time:** <t:{int(time.time())}:F>", color=0x00ff00)
+            
+            embed.set_image(url="attachment://"+filename)
+
+            await banner_log_channel.send(embed=embed, file=file)
+
+            if not interaction.user.id in banner_admins:
+                banner_change_date = int(time.time())
+                banner_changer_id = interaction.user.id
+                banner_changer_name = interaction.user.name
+                update_db()
+            await interaction.followup.send(":white_check_mark: Banner updated successfully!")
+        except Exception as e:
+                await interaction.followup.send(f":x: Failed to update banner: `{e}`", ephemeral=True)
+    else:
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
+
+# ======================= these are for our server only so no need to make too fancy =======================
+
+@client.tree.command(name="update", description="Update the variables from vars.json without needing to restart the bot", guild=discord.Object(id=banner_cmd_guild_id))
+async def update_vars_cmd(interaction:discord.Interaction):
+    update_vars()
+    if interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(":white_check_mark: Variables updated!")
+    else:
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
+
+@client.tree.command(name="banner-ban", description="Ban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+async def banner_ban_cmd(interaction:discord.Interaction, user_id:str):
+    global banner_banned
+    if interaction.user.id in banner_admins:
+        user = client.get_user(int(user_id))
+        if not user:
+            await interaction.response.send_message(f":x: User not found.")
+            return
+        if user.id not in banner_banned:
+            banner_banned.append(user.id)
+            update_db()
+            await interaction.response.send_message(f":white_check_mark: {user.name} has been banned from changing the banner.")
+        else:
+            await interaction.response.send_message(f":warning: {user.name} is already banned from changing the banner.")
+    else:
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
+
+@client.tree.command(name="banner-unban", description="Unban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
+    global banner_banned
+    if interaction.user.id in banner_admins:
+        user = client.get_user(int(user_id))
+        if not user:
+            await interaction.response.send_message(f":x: User not found.")
+            return
+        if user.id in banner_banned:
+            banner_banned.remove(user.id)
+            update_db()
+            await interaction.response.send_message(f":white_check_mark: {user.name} has been unbanned from changing the banner.")
+        else:
+            await interaction.response.send_message(f":warning: {user.name} is not banned from changing the banner.")
+    else:
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 client.run(TOKEN)
