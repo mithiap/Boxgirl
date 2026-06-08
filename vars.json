@@ -11,5 +11,6 @@
     "banner_allowed_roles":[
         1009840515732226078,
         1504705457573335071
-    ]
+    ],
+    "banner_delay_hours": 1
 }

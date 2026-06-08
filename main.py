@@ -18,6 +18,7 @@ banner_cmd_guild_id:int   = variables["banner_cmd_guild_id"]
 banner_log_channel_id:int = variables["banner_log_channel_id"]
 banner_admins:list        = variables["banner_admins"]
 banner_allowed_roles:list = variables["banner_allowed_roles"]
+banner_delay_hours:int    = variables["banner_delay_hours"]
 
 db:dict = json.load(open("./db.json", "r"))
 
@@ -76,6 +77,7 @@ def update_vars():
     global banner_log_channel_id
     global banner_admins
     global banner_allowed_roles
+    global banner_delay_hours
 
     variables = json.load(open("./vars.json", "r"))
     tracked_user_id       = variables["tracked_user_id"]
@@ -85,6 +87,7 @@ def update_vars():
     banner_log_channel_id = variables["banner_log_channel_id"]
     banner_admins         = variables["banner_admins"]
     banner_allowed_roles  = variables["banner_allowed_roles"]
+    banner_delay_hours    = variables["banner_delay_hours"]
 
 async def offline_to_online():
     global online
@@ -186,7 +189,8 @@ async def catch_up_cmd(interaction:discord.Interaction):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="set-banner", description="Set the banner for the bot")
+@client.tree.command(name="banner", description="Set the banner for the bot")
+@discord.app_commands.describe(banner="Set the banner for the bot - Please choose a SMM:WE related image (max 10 MB)")
 async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachment):
     global banner_change_date
     global banner_changer_id
@@ -204,8 +208,8 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             return
     
         if not interaction.user.id in banner_admins:
-            if int(time.time()) - banner_change_date < 3600: # 1 hour cooldown for non-admins
-                remaining_time = 3600 - (int(time.time()) - banner_change_date)
+            if int(time.time()) - banner_change_date < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
+                remaining_time = 60 * 60 * banner_delay_hours - (int(time.time()) - banner_change_date)
                 await interaction.response.send_message(f":x: The banner can only be changed once every hour. Please wait {remaining_time//60} minutes and {remaining_time%60} seconds.", ephemeral=True)
                 return
 
