@@ -152,7 +152,7 @@ intents.members = True
 client = Client("", intents=intents)
 client.log_channel = None
 
-@client.tree.command(name="toggle", description="Enable or disable tracking the EK-Bot's status")
+@client.tree.command(name="toggle", description="⚠ Enable or disable tracking EK-Bot")
 async def toggle_track(interaction:discord.Interaction, enable:bool):
     global track
     if interaction.user.guild_permissions.administrator:
@@ -160,7 +160,7 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
             track = False
             await client.change_presence(
                 status=discord.Status.idle,
-                activity=discord.Game("Servers are not being tracked")
+                activity=discord.Game("Tracking is currently off")
             )
             await interaction.response.send_message(":warning: Tracking has been **disabled**.")
         else:
@@ -173,7 +173,7 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="catch-up", description="Check EK-Bot's status and update the message accordingly")
+@client.tree.command(name="catch-up", description="⚠ Check EK-Bot's status and update the message accordingly")
 async def catch_up_cmd(interaction:discord.Interaction):
     global online
     if interaction.user.guild_permissions.administrator:
@@ -233,7 +233,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             filename = banner.filename.replace(" ", "").replace("_", "")
             file = discord.File(fp=image_stream, filename=filename)
 
-            embed = discord.Embed(title="Banner Updated", description=f"**Changed by:** {interaction.user.name} [{interaction.user.id}]\n**Time:** <t:{int(time.time())}:F>", color=0x00ff00)
+            embed = discord.Embed(title="<:boxg:1502150406523064401> Logs ︱ Banner Updated", description=f"{interaction.user.name} (<@{interaction.user.id}>) changed my banner! - <t:{int(time.time())}:f>\n\n`ID: {interaction.user.id}`", color=0x5B0BAA)
             
             embed.set_image(url="attachment://"+filename)
 
@@ -244,7 +244,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
                 banner_changer_id = interaction.user.id
                 banner_changer_name = interaction.user.name
                 update_db()
-            await interaction.followup.send(":white_check_mark: Banner updated successfully!")
+            await interaction.followup.send(":white_check_mark: Banner updated successfully! Check it out!")
         except Exception as e:
                 await interaction.followup.send(f":x: Failed to update banner: `{e}`", ephemeral=True)
     else:
@@ -252,7 +252,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
 
 # ======================= these are for our server only so no need to make too fancy =======================
 
-@client.tree.command(name="update", description="Update the variables from vars.json without needing to restart the bot", guild=discord.Object(id=banner_cmd_guild_id))
+@client.tree.command(name="update", description="📦 Update the variables from vars.json without needing to restart the bot", guild=discord.Object(id=banner_cmd_guild_id))
 async def update_vars_cmd(interaction:discord.Interaction):
     update_vars()
     if interaction.user.guild_permissions.administrator:
@@ -260,7 +260,7 @@ async def update_vars_cmd(interaction:discord.Interaction):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="banner-ban", description="Ban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+@client.tree.command(name="banner-ban", description="📦 Ban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
 async def banner_ban_cmd(interaction:discord.Interaction, user_id:str):
     global banner_banned
     if interaction.user.id in banner_admins:
@@ -277,7 +277,7 @@ async def banner_ban_cmd(interaction:discord.Interaction, user_id:str):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="banner-unban", description="Unban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+@client.tree.command(name="banner-unban", description="📦 Unban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
 async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global banner_banned
     if interaction.user.id in banner_admins:
