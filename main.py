@@ -124,13 +124,8 @@ class Client(commands.Bot):
         global online
         print(f"{self.user.name} online")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
-        member = self.log_channel.guild.get_member(tracked_user_id)
         await self.tree.sync()
         await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
-        if member.status.name != "offline" and not online:
-            await offline_to_online()
-        elif member.status.name == "offline" and online:
-            await online_to_offline()
 
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
         global online
