@@ -112,7 +112,7 @@ async def online_to_offline():
     online = False
     await client.change_presence(
         status=discord.Status.dnd,
-        activity=discord.Game("Servers are down, welp")
+        activity=discord.CustomActivity("Servers are down, download levels instead")
     )
     try:
         await client.get_channel(log_channel_id).get_partial_message(last_msg_id).delete()
@@ -161,7 +161,7 @@ client.log_channel = None
 
 # ======================= commands =======================
 
-@client.tree.command(name="toggle", description="⚠ Enable or disable tracking EK-Bot")
+@client.tree.command(name="toggle", description="🔶 Enable or disable tracking EK-Bot")
 @discord.app_commands.allowed_contexts(guilds = True)
 async def toggle_track(interaction:discord.Interaction, enable:bool):
     global track
@@ -170,7 +170,7 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
             track = False
             await client.change_presence(
                 status=discord.Status.idle,
-                activity=discord.Game("Tracking is currently off")
+                activity=discord.CustomActivity("Tracking is currently off")
             )
             await interaction.response.send_message(":warning: Tracking has been **disabled**.")
         else:
@@ -184,7 +184,7 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
-@client.tree.command(name="catch-up", description="⚠ Check EK-Bot's status and update the message accordingly")
+@client.tree.command(name="catch-up", description="🔶 Check EK-Bot's status and update the message accordingly")
 @discord.app_commands.allowed_contexts(guilds = True)
 async def catch_up_cmd(interaction:discord.Interaction):
     global online
@@ -192,10 +192,10 @@ async def catch_up_cmd(interaction:discord.Interaction):
         member = client.log_channel.guild.get_member(tracked_user_id)
         if member.status.name != "offline" and not online:
             await offline_to_online()
-            await interaction.response.send_message(":white_check_mark: EK-Bot is now online, I've updated my message.")
+            await interaction.response.send_message(":white_check_mark: EK-Bot is now **online**, I've updated my message.")
         elif member.status.name == "offline" and online:
             await online_to_offline()
-            await interaction.response.send_message(":white_check_mark: EK-Bot is now offline, I've updated my message.")
+            await interaction.response.send_message(":white_check_mark: EK-Bot is now **offline**, I've updated my message.")
         else:
             await interaction.response.send_message(":warning: EK-Bot's status is the same as the last update, no changes were made.")
     else:
