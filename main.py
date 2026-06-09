@@ -130,17 +130,14 @@ class Client(commands.Bot):
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         await self.tree.sync()
         await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
-
-    async def on_presence_update(self, before:discord.Member, after:discord.Member):
-        global online
-        global track
-
         if online:
             await client.change_presence(
                 status=discord.Status.online,
                 activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
             )
-        
+    async def on_presence_update(self, before:discord.Member, after:discord.Member):
+        global online
+        global track
         if track:
             if self.log_channel and before.id == tracked_user_id:
                 if before.status.name != "offline" and after.status.name == "offline" and online:
