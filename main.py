@@ -94,7 +94,8 @@ async def offline_to_online():
     global last_msg_id
     online = True
     await client.change_presence(
-        status=discord.Status.online
+        status=discord.Status.online,
+        activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
     )
     try:
         await client.get_channel(log_channel_id).get_partial_message(last_msg_id).delete()
@@ -133,6 +134,12 @@ class Client(commands.Bot):
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
         global online
         global track
+
+        if online:
+            await client.change_presence(
+                status=discord.Status.online,
+                activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
+            )
         
         if track:
             if self.log_channel and before.id == tracked_user_id:
@@ -152,7 +159,10 @@ intents.members = True
 client = Client("", intents=intents)
 client.log_channel = None
 
+# ======================= commands =======================
+
 @client.tree.command(name="toggle", description="⚠ Enable or disable tracking EK-Bot")
+@discord.app_commands.allowed_contexts(guilds = True)
 async def toggle_track(interaction:discord.Interaction, enable:bool):
     global track
     if interaction.user.guild_permissions.administrator:
@@ -166,7 +176,8 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
         else:
             track = True
             await client.change_presence(
-                status=discord.Status.online
+                status=discord.Status.online,
+                activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
             )
             await interaction.response.send_message(":white_check_mark: Tracking has been **enabled**.")
         update_db()
@@ -174,6 +185,7 @@ async def toggle_track(interaction:discord.Interaction, enable:bool):
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="catch-up", description="⚠ Check EK-Bot's status and update the message accordingly")
+@discord.app_commands.allowed_contexts(guilds = True)
 async def catch_up_cmd(interaction:discord.Interaction):
     global online
     if interaction.user.guild_permissions.administrator:
@@ -191,12 +203,14 @@ async def catch_up_cmd(interaction:discord.Interaction):
 
 @client.tree.command(name="banner", description="Set the banner for the bot")
 @discord.app_commands.describe(banner="Set the banner for the bot - Please choose a SMM:WE related image (max 10 MB)")
+@discord.app_commands.allowed_contexts(guilds = True)
 async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachment):
     global banner_change_date
     global banner_changer_id
     global banner_changer_name
     global banner_banned
     global banner_log_channel_id
+    global online
 
     if interaction.user.id in banner_admins or any(role.id in banner_allowed_roles for role in interaction.user.roles):
         if interaction.user.id in banner_banned:
@@ -208,9 +222,9 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             return
     
         if not interaction.user.id in banner_admins:
-            if int(time.time()) - banner_change_date < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
-                remaining_time = 60 * 60 * banner_delay_hours - (int(time.time()) - banner_change_date)
-                await interaction.response.send_message(f":x: The banner can only be changed once every hour. Please wait {remaining_time//60} minutes and {remaining_time%60} seconds.", ephemeral=True)
+            cooldown = int(time.time()) - banner_change_date
+            if cooldown < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
+                await interaction.response.send_message(f":x: The banner can only be changed once every hour. You'll be able to change it <t:{int(time.time()) + (60 * 60 * banner_delay_hours)}:R>.", ephemeral=True)
                 return
 
         if not banner.content_type or not banner.content_type.startswith("image/"):
@@ -225,6 +239,12 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             await interaction.response.defer()
             img_bytes = await banner.read()
             await client.user.edit(banner=img_bytes)
+
+            if online:
+                await client.change_presence(
+                    status=discord.Status.online,
+                    activity=(discord.CustomActivity(f"Banner by {interaction.user.name}") if interaction.user.name else None)
+                )
 
             banner_log_channel = client.get_channel(banner_log_channel_id)
     
@@ -242,8 +262,8 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             if not interaction.user.id in banner_admins:
                 banner_change_date = int(time.time())
                 banner_changer_id = interaction.user.id
-                banner_changer_name = interaction.user.name
-                update_db()
+            banner_changer_name = interaction.user.name
+            update_db()
             await interaction.followup.send(":white_check_mark: Banner updated successfully! Check it out!")
         except Exception as e:
                 await interaction.followup.send(f":x: Failed to update banner: `{e}`", ephemeral=True)
@@ -253,6 +273,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
 # ======================= these are for our server only so no need to make too fancy =======================
 
 @client.tree.command(name="update", description="📦 Update the variables from vars.json without needing to restart the bot", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
 async def update_vars_cmd(interaction:discord.Interaction):
     update_vars()
     if interaction.user.guild_permissions.administrator:
@@ -261,6 +282,7 @@ async def update_vars_cmd(interaction:discord.Interaction):
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="banner-ban", description="📦 Ban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
 async def banner_ban_cmd(interaction:discord.Interaction, user_id:str):
     global banner_banned
     if interaction.user.id in banner_admins:
@@ -278,6 +300,7 @@ async def banner_ban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="banner-unban", description="📦 Unban a user from changing the banner", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
 async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global banner_banned
     if interaction.user.id in banner_admins:
