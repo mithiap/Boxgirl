@@ -53,7 +53,7 @@ OFFLINE_MSG = f"""
 HONEYPOT_MSG = """
 Hola $username$, tu cuenta ha sido expulsada temporalmente de **$guild_name$** debido a que ha sido comprometida (enviando imágenes, enlaces o mensajes sospechosos). Asegura tu cuenta antes de volver por favor.
 
-https://discord.gg/enginekingdom
+https://discord.gg/n4JdZbCunR
 """
 # actual code
 
