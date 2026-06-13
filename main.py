@@ -9,7 +9,7 @@ import io
 
 load_dotenv()
 
-variables:dict = json.load(open("./indev/vars.json", "r"))
+variables:dict = json.load(open("./vars.json", "r"))
 
 engine_kingdom_guild_id:int = variables["engine_kingdom_guild_id"]
 tracked_user_id:int       = variables["tracked_user_id"]
@@ -23,7 +23,7 @@ banner_delay_hours:int    = variables["banner_delay_hours"]
 honeypot_channel_id:int   = variables["honeypot_channel_id"]
 honeypot_immune_roles:list = variables["honeypot_immune_roles"]
 
-db:dict = json.load(open("./indev/db.json", "r"))
+db:dict = json.load(open("./db.json", "r"))
 
 last_msg_id:int         = db["last_msg_id"]
 online:bool             = db["online"]
