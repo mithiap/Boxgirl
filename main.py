@@ -19,6 +19,7 @@ banner_log_channel_id:int = variables["banner_log_channel_id"]
 banner_admins:list        = variables["banner_admins"]
 banner_allowed_roles:list = variables["banner_allowed_roles"]
 banner_delay_hours:int    = variables["banner_delay_hours"]
+engine_kingdom_guild_id:int = variables["engine_kingdom_guild_id"]
 
 db:dict = json.load(open("./db.json", "r"))
 
@@ -78,6 +79,7 @@ def update_vars():
     global banner_admins
     global banner_allowed_roles
     global banner_delay_hours
+    global engine_kingdom_guild_id
 
     variables = json.load(open("./vars.json", "r"))
     tracked_user_id       = variables["tracked_user_id"]
@@ -88,6 +90,7 @@ def update_vars():
     banner_admins         = variables["banner_admins"]
     banner_allowed_roles  = variables["banner_allowed_roles"]
     banner_delay_hours    = variables["banner_delay_hours"]
+    engine_kingdom_guild_id = variables["engine_kingdom_guild_id"]
 
 async def offline_to_online():
     global online
@@ -200,7 +203,7 @@ async def catch_up_cmd(interaction:discord.Interaction):
 
 @client.tree.command(name="banner", description="Set the banner for the bot")
 @discord.app_commands.describe(banner="Set the banner for the bot - Please choose a SMM:WE related image (max 10 MB)")
-@discord.app_commands.allowed_contexts(guilds = True)
+@discord.app_commands.allowed_contexts(guilds = True, dms = True)
 async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachment):
     global banner_change_date
     global banner_changer_id
@@ -209,16 +212,27 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
     global banner_log_channel_id
     global online
 
-    if interaction.user.id in banner_admins or any(role.id in banner_allowed_roles for role in interaction.user.roles):
-        if interaction.user.id in banner_banned:
+    if interaction.guild:
+        member = interaction.guild.get_member(interaction.user.id)
+    else:
+        guild = client.get_guild(engine_kingdom_guild_id)
+        member = guild.get_member(interaction.user.id)
+
+    if member.id in banner_admins or any(role.id in banner_allowed_roles for role in member.roles):
+        
+        if not member:
+            await interaction.response.send_message(":x: Couldn't find you in Engine Kingdom.", ephemeral=True)
+            return
+
+        if member.id in banner_banned:
             await interaction.response.send_message(":x: You are banned from changing the banner.", ephemeral=True)
             return
 
-        if interaction.user.id == banner_changer_id:
+        if member.id == banner_changer_id:
             await interaction.response.send_message(":x: You can't change the banner twice in a row.", ephemeral=True)
             return
     
-        if not interaction.user.id in banner_admins:
+        if not member.id in banner_admins:
             cooldown = int(time.time()) - banner_change_date
             if cooldown < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
                 await interaction.response.send_message(f":x: The banner can only be changed once every hour. You'll be able to change it <t:{int(time.time()) + (60 * 60 * banner_delay_hours)}:R>.", ephemeral=True)
@@ -240,7 +254,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             if online:
                 await client.change_presence(
                     status=discord.Status.online,
-                    activity=(discord.CustomActivity(f"Banner by {interaction.user.name}") if interaction.user.name else None)
+                    activity=(discord.CustomActivity(f"Banner by {member.name}") if member.name else None)
                 )
 
             banner_log_channel = client.get_channel(banner_log_channel_id)
@@ -250,16 +264,16 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
             filename = banner.filename.replace(" ", "").replace("_", "")
             file = discord.File(fp=image_stream, filename=filename)
 
-            embed = discord.Embed(title="<:boxg:1502150406523064401> Logs ︱ Banner Updated", description=f"{interaction.user.name} (<@{interaction.user.id}>) changed my banner! - <t:{int(time.time())}:f>\n\n`ID: {interaction.user.id}`", color=0x5B0BAA)
+            embed = discord.Embed(title="<:boxg:1502150406523064401> Logs ︱ Banner Updated", description=f"{member.name} (<@{member.id}>) changed my banner! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`", color=0x5B0BAA)
             
             embed.set_image(url="attachment://"+filename)
 
             await banner_log_channel.send(embed=embed, file=file)
 
-            if not interaction.user.id in banner_admins:
+            if not member.id in banner_admins:
                 banner_change_date = int(time.time())
-                banner_changer_id = interaction.user.id
-            banner_changer_name = interaction.user.name
+                banner_changer_id = member.id
+            banner_changer_name = member.name
             update_db()
             await interaction.followup.send(":white_check_mark: Banner updated successfully! Check it out!")
         except Exception as e:

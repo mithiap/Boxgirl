@@ -2,3 +2,5 @@ unmain.py
 .vscode
 .env
 .gitignore
+reference
+indev
