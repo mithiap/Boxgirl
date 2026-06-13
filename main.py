@@ -9,8 +9,9 @@ import io
 
 load_dotenv()
 
-variables:dict = json.load(open("./vars.json", "r"))
+variables:dict = json.load(open("./indev/vars.json", "r"))
 
+engine_kingdom_guild_id:int = variables["engine_kingdom_guild_id"]
 tracked_user_id:int       = variables["tracked_user_id"]
 log_channel_id:int        = variables["log_channel_id"]
 role_ping_id:int          = variables["role_ping_id"]
@@ -19,9 +20,10 @@ banner_log_channel_id:int = variables["banner_log_channel_id"]
 banner_admins:list        = variables["banner_admins"]
 banner_allowed_roles:list = variables["banner_allowed_roles"]
 banner_delay_hours:int    = variables["banner_delay_hours"]
-engine_kingdom_guild_id:int = variables["engine_kingdom_guild_id"]
+honeypot_channel_id:int   = variables["honeypot_channel_id"]
+honeypot_immune_roles:list = variables["honeypot_immune_roles"]
 
-db:dict = json.load(open("./db.json", "r"))
+db:dict = json.load(open("./indev/db.json", "r"))
 
 last_msg_id:int         = db["last_msg_id"]
 online:bool             = db["online"]
@@ -48,6 +50,11 @@ OFFLINE_MSG = f"""
 -# <@&{role_ping_id}> - $time$
 """
 
+HONEYPOT_MSG = """
+Hola $username$, tu cuenta ha sido expulsada temporalmente de **$guild_name$** debido a que ha sido comprometida (enviando imágenes, enlaces o mensajes sospechosos). Asegura tu cuenta antes de volver por favor.
+
+https://discord.gg/enginekingdom
+"""
 # actual code
 
 def update_db():
@@ -71,6 +78,7 @@ def update_db():
     json.dump(db, open("./db.json", "w"), indent=4)
 
 def update_vars():
+    global engine_kingdom_guild_id
     global tracked_user_id
     global log_channel_id
     global role_ping_id
@@ -79,9 +87,9 @@ def update_vars():
     global banner_admins
     global banner_allowed_roles
     global banner_delay_hours
-    global engine_kingdom_guild_id
 
     variables = json.load(open("./vars.json", "r"))
+    engine_kingdom_guild_id = variables["engine_kingdom_guild_id"]
     tracked_user_id       = variables["tracked_user_id"]
     log_channel_id        = variables["log_channel_id"]
     role_ping_id          = variables["role_ping_id"]
@@ -90,7 +98,11 @@ def update_vars():
     banner_admins         = variables["banner_admins"]
     banner_allowed_roles  = variables["banner_allowed_roles"]
     banner_delay_hours    = variables["banner_delay_hours"]
-    engine_kingdom_guild_id = variables["engine_kingdom_guild_id"]
+    honeypot_channel_id   = variables["honeypot_channel_id"]
+    honeypot_immune_roles = variables["honeypot_immune_roles"]
+
+    if client and client.log_channel and client.log_channel.id != log_channel_id:
+        client.log_channel = client.get_channel(log_channel_id)
 
 async def offline_to_online():
     global online
@@ -112,6 +124,8 @@ async def offline_to_online():
 async def online_to_offline():
     global online
     global last_msg_id
+    global honeypot_channel_id
+    global honeypot_immune_roles
     online = False
     await client.change_presence(
         status=discord.Status.dnd,
@@ -138,6 +152,7 @@ class Client(commands.Bot):
                 status=discord.Status.online,
                 activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
             )
+
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
         global online
         global track
@@ -149,8 +164,58 @@ class Client(commands.Bot):
                 elif before.status.name == "offline" and after.status.name != "offline" and not online:
                     await offline_to_online()
     
-    async def on_message(self, msg):
-        pass
+    async def on_message(self, msg:discord.Message):
+        if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
+            return
+
+        if msg.channel.id != honeypot_channel_id:
+            return
+        
+        try:
+            await msg.author.dm_channel.send(
+                HONEYPOT_MSG.replace("$username$", msg.author.name).replace("$guild_name$", msg.guild.name)
+            )
+        except:
+            pass
+
+        try:
+            await msg.delete()
+        except:
+            pass
+
+        await msg.author.ban(
+            reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
+            delete_message_days=1
+        )
+
+        embed = discord.Embed(
+            title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
+            description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            color=0x00FF00
+        )
+
+        channel = self.get_channel(banner_log_channel_id)
+
+        await channel.send(embed=embed)
+
+        await asyncio.sleep(10)
+
+        try:
+            await msg.author.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
+        except:
+            embed = discord.Embed(
+                title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+                description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                color=0xFF0000
+            )
+        else:
+            embed = discord.Embed(
+                title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 10 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                color=0x00FF00
+            )
+        await channel.send(embed=embed)
+
 
 intents = discord.Intents.default()
 intents.presences = True
@@ -280,6 +345,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
                 await interaction.followup.send(f":x: Failed to update banner: `{e}`", ephemeral=True)
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
+
 
 # ======================= these are for our server only so no need to make too fancy =======================
 
