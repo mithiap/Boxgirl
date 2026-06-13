@@ -172,7 +172,7 @@ class Client(commands.Bot):
             return
         
         try:
-            await msg.author.dm_channel.send(
+            await msg.author.send(
                 HONEYPOT_MSG.replace("$username$", msg.author.name).replace("$guild_name$", msg.guild.name)
             )
         except:
