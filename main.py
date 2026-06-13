@@ -198,7 +198,7 @@ class Client(commands.Bot):
 
         await channel.send(embed=embed)
 
-        await asyncio.sleep(900)
+        await asyncio.sleep(5)
 
         try:
             await msg.author.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
@@ -211,7 +211,7 @@ class Client(commands.Bot):
         else:
             embed = discord.Embed(
                 title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
-                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 15 minutes! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
                 color=0x00FF00
             )
         await channel.send(embed=embed)
