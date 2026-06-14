@@ -14,6 +14,7 @@ variables:dict = json.load(open("./vars.json", "r"))
 engine_kingdom_guild_id:int = variables["engine_kingdom_guild_id"]
 tracked_user_id:int       = variables["tracked_user_id"]
 log_channel_id:int        = variables["log_channel_id"]
+greet_channel_id:int      = variables["greet_channel_id"]
 role_ping_id:int          = variables["role_ping_id"]
 banner_cmd_guild_id:int   = variables["banner_cmd_guild_id"]
 banner_log_channel_id:int = variables["banner_log_channel_id"]
@@ -81,12 +82,15 @@ def update_vars():
     global engine_kingdom_guild_id
     global tracked_user_id
     global log_channel_id
+    global greet_channel_id
     global role_ping_id
     global banner_cmd_guild_id
     global banner_log_channel_id
     global banner_admins
     global banner_allowed_roles
     global banner_delay_hours
+    global honeypot_channel_id
+    global honeypot_immune_roles
 
     variables = json.load(open("./vars.json", "r"))
     engine_kingdom_guild_id = variables["engine_kingdom_guild_id"]
@@ -145,8 +149,10 @@ class Client(commands.Bot):
         global online
         print(f"{self.user.name} online")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
+        self.hw_channel:discord.TextChannel = self.get_channel(greet_channel_id)
         await self.tree.sync()
         await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
+        await self.hw_channel.send("Hello world!")
         if online:
             await client.change_presence(
                 status=discord.Status.online,
