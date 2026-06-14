@@ -191,7 +191,7 @@ class Client(commands.Bot):
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
-            color=0x00FF00
+            color=0xD4C32A
         )
 
         channel = self.get_channel(banner_log_channel_id)
@@ -206,13 +206,13 @@ class Client(commands.Bot):
             embed = discord.Embed(
                 title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
                 description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
-                color=0xFF0000
+                color=0xD42A2A
             )
         else:
             embed = discord.Embed(
                 title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
                 description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
-                color=0x00FF00
+                color=0x4CD42A
             )
         await channel.send(embed=embed)
 
@@ -300,7 +300,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
         if not member.id in banner_admins:
             cooldown = int(time.time()) - banner_change_date
             if cooldown < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
-                await interaction.response.send_message(f":x: The banner can only be changed once every hour. You'll be able to change it <t:{int(time.time()) + (60 * 60 * banner_delay_hours)}:R>.", ephemeral=True)
+                await interaction.response.send_message(f":x: The banner can only be changed once every hour. You'll be able to change it <t:{banner_change_date + (60 * 60 * banner_delay_hours)}:R>.", ephemeral=True)
                 return
 
         if not banner.content_type or not banner.content_type.startswith("image/"):
