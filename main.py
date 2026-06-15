@@ -33,6 +33,7 @@ banner_change_date:int  = db["banner_change_date"]
 banner_changer_id:int   = db["banner_changer_id"]
 banner_changer_name:str = db["banner_changer_name"]
 banner_banned:list      = db["banner_banned"]
+honey_eaten:int         = db["honey_eaten"]
 
 TOKEN = os.getenv("TOKEN")
 
@@ -66,6 +67,7 @@ def update_db():
     global banner_changer_id
     global banner_changer_name
     global banner_banned
+    global honey_eaten
 
     db.update({
         "last_msg_id": last_msg_id,
@@ -74,7 +76,8 @@ def update_db():
         "banner_change_date": banner_change_date,
         "banner_changer_id": banner_changer_id,
         "banner_changer_name": banner_changer_name,
-        "banner_banned": banner_banned
+        "banner_banned": banner_banned,
+        "honey_eaten": honey_eaten
     })
     json.dump(db, open("./db.json", "w"), indent=4)
 
@@ -147,6 +150,7 @@ async def online_to_offline():
 class Client(commands.Bot):
     async def on_ready(self):
         global online
+        global honey_eaten
         print(f"{self.user.name} online")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         self.hw_channel:discord.TextChannel = self.get_channel(greet_channel_id)
@@ -194,9 +198,11 @@ class Client(commands.Bot):
             delete_message_days=1
         )
 
+        honey_eaten += 1
+        update_db()
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
-            description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
             color=0xD4C32A
         )
 
