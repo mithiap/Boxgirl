@@ -417,46 +417,46 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.response.send_message(f":x: User not found")
         return
     
-        try:
-            await member.send(
-                HONEYPOT_MSG.replace("$username$", member.name).replace("$guild_name$", guild.name)
-            )
-        except:
-            pass
-
-        await member.ban(
-            reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
-            delete_message_days=1
+    try:
+        await member.send(
+            HONEYPOT_MSG.replace("$username$", member.name).replace("$guild_name$", guild.name)
         )
+    except:
+        pass
 
-        honey_eaten += 1
-        update_db()
+    await member.ban(
+        reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
+        delete_message_days=1
+    )
+
+    honey_eaten += 1
+    update_db()
+    embed = discord.Embed(
+        title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
+        description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
+        color=0xD4C32A
+    )
+
+    channel = self.get_channel(banner_log_channel_id)
+
+    await channel.send(embed=embed)
+
+    await asyncio.sleep(5)
+
+    try:
+        await member.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
+    except:
         embed = discord.Embed(
-            title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
-            description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
-            color=0xD4C32A
+            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+            description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            color=0xD42A2A
         )
-
-        channel = self.get_channel(banner_log_channel_id)
-
-        await channel.send(embed=embed)
-
-        await asyncio.sleep(5)
-
-        try:
-            await member.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
-        except:
-            embed = discord.Embed(
-                title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
-                description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
-                color=0xD42A2A
-            )
-        else:
-            embed = discord.Embed(
-                title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
-                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
-                color=0x4CD42A
-            )
-        await channel.send(embed=embed)
+    else:
+        embed = discord.Embed(
+            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+            description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            color=0x4CD42A
+        )
+    await channel.send(embed=embed)
 
 client.run(TOKEN)
