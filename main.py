@@ -173,14 +173,14 @@ class Client(commands.Bot):
 
                 elif before.status.name == "offline" and after.status.name != "offline" and not online:
                     await offline_to_online()
-    
+
     async def on_message(self, msg:discord.Message):
         if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
             return
 
         if msg.channel.id != honeypot_channel_id:
             return
-        
+
         try:
             await msg.author.send(
                 HONEYPOT_MSG.replace("$username$", msg.author.name).replace("$guild_name$", msg.guild.name)
@@ -292,15 +292,14 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
     if interaction.guild:
         member = interaction.guild.get_member(interaction.user.id)
     else:
-        guild = client.get_guild(engine_kingdom_guild_id)
+        guild = client.get_channel(log_channel_id).guild
         member = guild.get_member(interaction.user.id)
 
-    if member.id in banner_admins or any(role.id in banner_allowed_roles for role in member.roles):
-        
-        if not member:
-            await interaction.response.send_message(":x: Couldn't find you in Engine Kingdom.", ephemeral=True)
-            return
+    if not member:
+        await interaction.response.send_message(":x: Couldn't find you in Engine Kingdom.", ephemeral=True)
+        return
 
+    if member.id in banner_admins or any(role.id in banner_allowed_roles for role in member.roles):
         if member.id in banner_banned:
             await interaction.response.send_message(":x: You are banned from changing the banner.", ephemeral=True)
             return
@@ -308,7 +307,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
         if member.id == banner_changer_id:
             await interaction.response.send_message(":x: You can't change the banner twice in a row.", ephemeral=True)
             return
-    
+
         if not member.id in banner_admins:
             cooldown = int(time.time()) - banner_change_date
             if cooldown < 60 * 60 * banner_delay_hours: # 1 hour cooldown for non-admins
@@ -318,7 +317,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
         if not banner.content_type or not banner.content_type.startswith("image/"):
             await interaction.response.send_message(":x: Please upload a valid image file.", ephemeral=True)
             return
-    
+
         if banner.size > 10 * 1024 * 1024:
             await interaction.response.send_message(":x: The image file size must be less than 10 MB.", ephemeral=True)
             return
@@ -335,14 +334,14 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
                 )
 
             banner_log_channel = client.get_channel(banner_log_channel_id)
-    
+
             image_stream = io.BytesIO(img_bytes)
 
             filename = banner.filename.replace(" ", "").replace("_", "")
             file = discord.File(fp=image_stream, filename=filename)
 
             embed = discord.Embed(title="<:boxg:1502150406523064401> Logs ︱ Banner Updated", description=f"{member.name} (<@{member.id}>) changed my banner! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`", color=0x5B0BAA)
-            
+
             embed.set_image(url="attachment://"+filename)
 
             await banner_log_channel.send(embed=embed, file=file)
@@ -405,5 +404,59 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
             await interaction.response.send_message(f":warning: {user.name} is not banned from changing the banner.")
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
+
+@client.tree.command(name="softban", description="📦 Softban an user from Engine Kingdom", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
+async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
+    global log_channel_id
+    
+    guild = client.get_channel(log_channel_id).guild
+    member = guild.get_member(int(user_id))
+    
+    if not member:
+        await interaction.response.send_message(f":x: User not found")
+        return
+    
+        try:
+            await member.send(
+                HONEYPOT_MSG.replace("$username$", member.name).replace("$guild_name$", guild.name)
+            )
+        except:
+            pass
+
+        await member.ban(
+            reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
+            delete_message_days=1
+        )
+
+        honey_eaten += 1
+        update_db()
+        embed = discord.Embed(
+            title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
+            description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
+            color=0xD4C32A
+        )
+
+        channel = self.get_channel(banner_log_channel_id)
+
+        await channel.send(embed=embed)
+
+        await asyncio.sleep(5)
+
+        try:
+            await member.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
+        except:
+            embed = discord.Embed(
+                title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+                description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                color=0xD42A2A
+            )
+        else:
+            embed = discord.Embed(
+                title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                color=0x4CD42A
+            )
+        await channel.send(embed=embed)
 
 client.run(TOKEN)
