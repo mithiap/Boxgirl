@@ -416,6 +416,8 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     if not member:
         await interaction.response.send_message(f":x: User not found")
         return
+
+    await interaction.response.defer()
     
     try:
         await member.send(
@@ -428,7 +430,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
         delete_message_days=1
     )
-
+    await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
     honey_eaten += 1
     update_db()
     embed = discord.Embed(
@@ -437,7 +439,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         color=0xD4C32A
     )
 
-    channel = self.get_channel(banner_log_channel_id)
+    channel = client.get_channel(banner_log_channel_id)
 
     await channel.send(embed=embed)
 
@@ -448,13 +450,13 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     except:
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
-            description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            description=f"Failed to automatically unban {member.name} (<@{member.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0xD42A2A
         )
     else:
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
-            description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+            description=f"Automatically unbanned {member.name} (<@{member.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0x4CD42A
         )
     await channel.send(embed=embed)
