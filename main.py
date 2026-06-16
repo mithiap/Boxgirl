@@ -411,6 +411,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
 @discord.app_commands.allowed_contexts(guilds = True)
 async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global log_channel_id
+    global honey_eaten
     
     guild = client.get_channel(log_channel_id).guild
     member = guild.get_member(int(user_id))
