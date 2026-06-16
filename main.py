@@ -175,6 +175,8 @@ class Client(commands.Bot):
                     await offline_to_online()
 
     async def on_message(self, msg:discord.Message):
+        global honey_eaten
+
         if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
             return
 
