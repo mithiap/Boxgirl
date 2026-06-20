@@ -2,12 +2,16 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import asyncio
 import discord
+import redis
 import json
 import time
 import os
 import io
 
 load_dotenv()
+
+TOKEN = os.getenv("TOKEN")
+REDIS_URL = os.getenv("REDIS_URL")
 
 variables:dict = json.load(open("./vars.json", "r"))
 
@@ -25,6 +29,7 @@ honeypot_channel_id:int   = variables["honeypot_channel_id"]
 honeypot_immune_roles:list = variables["honeypot_immune_roles"]
 
 db:dict = json.load(open("./db.json", "r"))
+redis_db = redis.Redis.from_url(REDIS_URL)
 
 last_msg_id:int         = db["last_msg_id"]
 online:bool             = db["online"]
@@ -33,9 +38,7 @@ banner_change_date:int  = db["banner_change_date"]
 banner_changer_id:int   = db["banner_changer_id"]
 banner_changer_name:str = db["banner_changer_name"]
 banner_banned:list      = db["banner_banned"]
-honey_eaten:int         = db["honey_eaten"]
-
-TOKEN = os.getenv("TOKEN")
+honey_eaten:int         = int(redis_db.get("honey_eaten"))
 
 # ==================== change zeez ====================
 ONLINE_MSG = f"""
@@ -67,7 +70,6 @@ def update_db():
     global banner_changer_id
     global banner_changer_name
     global banner_banned
-    global honey_eaten
 
     db.update({
         "last_msg_id": last_msg_id,
@@ -76,8 +78,7 @@ def update_db():
         "banner_change_date": banner_change_date,
         "banner_changer_id": banner_changer_id,
         "banner_changer_name": banner_changer_name,
-        "banner_banned": banner_banned,
-        "honey_eaten": honey_eaten
+        "banner_banned": banner_banned
     })
     json.dump(db, open("./db.json", "w"), indent=4)
 
@@ -177,6 +178,13 @@ class Client(commands.Bot):
     async def on_message(self, msg:discord.Message):
         global honey_eaten
 
+        try:
+            msg.guild.fetch_ban(msg.author)
+        except:
+            pass
+        else:
+            return
+
         if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
             return
 
@@ -201,7 +209,7 @@ class Client(commands.Bot):
         )
 
         honey_eaten += 1
-        update_db()
+        redis_db.incr("honey_eaten")
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
@@ -429,13 +437,17 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     except:
         pass
 
-    await member.ban(
-        reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
-        delete_message_days=1
-    )
-    await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
+    try:
+        await member.ban(
+            reason="Cuenta hackeada (cayó en el bait de #the-thing) ban temporal.",
+            delete_message_days=1
+        )
+    except Exception as e:
+        await interaction.followup.send(f":x: Failed to softban `{member.name}`: `{e}`")
+    else:
+        await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
     honey_eaten += 1
-    update_db()
+    redis_db.incr("honey_eaten")
     embed = discord.Embed(
         title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
