@@ -178,17 +178,17 @@ class Client(commands.Bot):
     async def on_message(self, msg:discord.Message):
         global honey_eaten
 
-        try:
-            msg.guild.fetch_ban(msg.author)
-        except:
-            pass
-        else:
-            return
-
         if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
             return
 
         if msg.channel.id != honeypot_channel_id:
+            return
+
+        try:
+            await msg.guild.fetch_ban(msg.author)
+        except:
+            pass
+        else:
             return
 
         try:
