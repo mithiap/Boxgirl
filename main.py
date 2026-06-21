@@ -220,7 +220,7 @@ class Client(commands.Bot):
 
         await channel.send(embed=embed)
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(15*60)
 
         try:
             await msg.author.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
@@ -233,7 +233,7 @@ class Client(commands.Bot):
         else:
             embed = discord.Embed(
                 title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
-                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
+                description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 15 minutes! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
                 color=0x4CD42A
             )
         await channel.send(embed=embed)
@@ -423,6 +423,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     
     guild = client.get_channel(log_channel_id).guild
     member = guild.get_member(int(user_id))
+    user = client.get_user(int(user_id))
     
     if not member:
         await interaction.response.send_message(f":x: User not found")
@@ -446,8 +447,8 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.followup.send(f":x: Failed to softban `{member.name}`: `{e}`")
     else:
         await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
-    honey_eaten += 1
-    redis_db.incr("honey_eaten")
+        honey_eaten += 1
+        redis_db.incr("honey_eaten")
     embed = discord.Embed(
         title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
@@ -461,7 +462,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     await asyncio.sleep(5)
 
     try:
-        await member.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
+        await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
     except:
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
