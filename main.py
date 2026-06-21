@@ -38,7 +38,6 @@ banner_change_date:int  = db["banner_change_date"]
 banner_changer_id:int   = db["banner_changer_id"]
 banner_changer_name:str = db["banner_changer_name"]
 banner_banned:list      = db["banner_banned"]
-honey_eaten:int         = int(redis_db.get("honey_eaten"))
 
 # ==================== change zeez ====================
 ONLINE_MSG = f"""
@@ -176,8 +175,6 @@ class Client(commands.Bot):
                     await offline_to_online()
 
     async def on_message(self, msg:discord.Message):
-        global honey_eaten
-
         if msg.author.bot or any(role.id in honeypot_immune_roles for role in msg.author.roles):
             return
 
@@ -208,8 +205,8 @@ class Client(commands.Bot):
             delete_message_days=1
         )
 
-        honey_eaten += 1
         redis_db.incr("honey_eaten")
+        honey_eaten = int(redis_db.get("honey_eaten"))
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
@@ -475,6 +472,38 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
             description=f"Automatically unbanned {member.name} (<@{member.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0x4CD42A
         )
+    await channel.send(embed=embed)
+
+@client.tree.command(name="unban", description="📦 Unban an user from Engine Kingdom", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
+async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
+    global log_channel_id
+    global honey_eaten
+    
+    guild = client.get_channel(log_channel_id).guild
+    user = client.get_user(int(user_id))
+
+    await interaction.response.defer()
+
+    channel = client.get_channel(banner_log_channel_id)
+
+    try:
+        await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
+    except:
+        embed = discord.Embed(
+            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+            description=f"Failed to manually unban {user.name} (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
+            color=0xD42A2A
+        )
+        await interaction.followup.send(f":x: Failed fo unban <@{user.id}> ({user.name}) from {guild.name}")
+    else:
+        embed = discord.Embed(
+            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+            description=f"Manually unbanned {user.name} (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
+            color=0x4CD42A
+        )
+        await interaction.followup.send(f":white_check_mark: <@{user.id}> ({user.name}) was unbanned from {guild.name}")
+    embed.set_footer(f"Action performed by @{interaction.user.name} - {interaction.user.id}")
     await channel.send(embed=embed)
 
 client.run(TOKEN)
