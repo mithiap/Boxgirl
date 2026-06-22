@@ -498,17 +498,17 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     except:
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
-            description=f"Failed to manually unban {user.name} (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
+            description=f"Failed to manually unban <@{user.id}>! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0xD42A2A
         )
-        await interaction.followup.send(f":x: Failed fo unban <@{user.id}> ({user.name}) from {guild.name}")
+        await interaction.followup.send(f":x: Failed fo unban <@{user.id}> from {guild.name}")
     else:
         embed = discord.Embed(
             title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
-            description=f"Manually unbanned {user.name} (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
+            description=f"Manually unbanned (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0x4CD42A
         )
-        await interaction.followup.send(f":white_check_mark: <@{user.id}> ({user.name}) was unbanned from {guild.name}")
+        await interaction.followup.send(f":white_check_mark: <@{user.id}> was unbanned from {guild.name}")
     embed.set_footer(f"Action performed by @{interaction.user.name} - {interaction.user.id}")
     await channel.send(embed=embed)
 
