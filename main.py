@@ -56,6 +56,7 @@ OFFLINE_MSG = f"""
 
 HONEYPOT_MSG = """
 Hola $username$, tu cuenta ha sido expulsada temporalmente de **$guild_name$** debido a que ha sido comprometida (enviando imágenes, enlaces o mensajes sospechosos). Asegura tu cuenta antes de volver por favor.
+-# Puedes volver en 15 minutos.
 
 https://discord.gg/n4JdZbCunR
 """
@@ -161,6 +162,11 @@ class Client(commands.Bot):
             await client.change_presence(
                 status=discord.Status.online,
                 activity=(discord.CustomActivity(f"Banner by {banner_changer_name}") if banner_changer_name else None)
+            )
+        else:
+            await client.change_presence(
+                status=discord.Status.dnd,
+                activity=discord.CustomActivity("Servers are down, download levels instead")
             )
 
     async def on_presence_update(self, before:discord.Member, after:discord.Member):
