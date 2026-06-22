@@ -487,7 +487,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global honey_eaten
     
     guild = client.get_channel(log_channel_id).guild
-    user = client.get_user(int(user_id))
+    user = discord.Object(id=int(user_id))
 
     await interaction.response.defer()
 
