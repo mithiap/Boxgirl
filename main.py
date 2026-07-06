@@ -27,6 +27,7 @@ banner_allowed_roles:list = variables["banner_allowed_roles"]
 banner_delay_hours:int    = variables["banner_delay_hours"]
 honeypot_channel_id:int   = variables["honeypot_channel_id"]
 honeypot_immune_roles:list = variables["honeypot_immune_roles"]
+honeypot_delete_channels:list = variables["honeypot_delete_channels"]
 
 db:dict = json.load(open("./db.json", "r"))
 redis_db = redis.Redis.from_url(REDIS_URL)
@@ -95,6 +96,7 @@ def update_vars():
     global banner_delay_hours
     global honeypot_channel_id
     global honeypot_immune_roles
+    global honeypot_delete_channels
 
     variables = json.load(open("./vars.json", "r"))
     engine_kingdom_guild_id = variables["engine_kingdom_guild_id"]
@@ -108,6 +110,7 @@ def update_vars():
     banner_delay_hours    = variables["banner_delay_hours"]
     honeypot_channel_id   = variables["honeypot_channel_id"]
     honeypot_immune_roles = variables["honeypot_immune_roles"]
+    honeypot_delete_channels = variables["honeypot_delete_channels"]
 
     if client and client.log_channel and client.log_channel.id != log_channel_id:
         client.log_channel = client.get_channel(log_channel_id)
@@ -218,6 +221,13 @@ class Client(commands.Bot):
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
             color=0xD4C32A
         )
+
+        for channel_id in honeypot_delete_channels:
+            channel = self.get_channel(channel_id)
+            try:
+                await channel.purge(limit=3, check=lambda m: (m.author.id == msg.author.id and abs(m.created_at.timestamp() - msg.created_at.timestamp()) < 60))
+            except:
+                pass
 
         channel = self.get_channel(banner_log_channel_id)
 
