@@ -518,7 +518,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
             color=0x4CD42A
         )
         await interaction.followup.send(f":white_check_mark: <@{user.id}> was unbanned from {guild.name}")
-    embed.set_footer(f"Action performed by @{interaction.user.name} - {interaction.user.id}")
+    embed.set_footer(text=f"Action performed by @{interaction.user.name} - {interaction.user.id}", icon_url=interaction.user.display_avatar.url)
     await channel.send(embed=embed)
 
 client.run(TOKEN)
