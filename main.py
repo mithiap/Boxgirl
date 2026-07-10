@@ -432,7 +432,6 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
 @discord.app_commands.allowed_contexts(guilds = True)
 async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global log_channel_id
-    global honey_eaten
     
     guild = client.get_channel(log_channel_id).guild
     member = guild.get_member(int(user_id))
@@ -460,8 +459,8 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.followup.send(f":x: Failed to softban `{member.name}`: `{e}`")
     else:
         await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
-        honey_eaten += 1
         redis_db.incr("honey_eaten")
+        honey_eaten = int(redis_db.get("honey_eaten"))
     embed = discord.Embed(
         title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
