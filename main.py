@@ -462,7 +462,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
     embed = discord.Embed(
-        title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by <@{interaction.user.id}>",
+        title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by {interaction.user.name}",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
         color=0xD4C32A
     )
