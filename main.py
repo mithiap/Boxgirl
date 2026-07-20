@@ -1,3 +1,4 @@
+from discord import message
 from discord.ext import commands
 from dotenv import load_dotenv
 import asyncio
@@ -221,6 +222,8 @@ class Client(commands.Bot):
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
             color=0xD4C32A
         )
+        if client.intents.message_content:
+            embed.add_field(name="Message content", value=f"`{msg.content if msg.content else '(No content)'}`"+(f'+{len(msg.attachments)} attachments' if msg.attachments else ''), inline=False)
 
         for channel_id in honeypot_delete_channels:
             channel = self.get_channel(channel_id)
@@ -381,7 +384,7 @@ async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachm
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 
-# ======================= these are for our server only so no need to make too fancy =======================
+# ======================= our server only =======================
 
 @client.tree.command(name="update", description="📦 Update the variables from vars.json without needing to restart the bot", guild=discord.Object(id=banner_cmd_guild_id))
 @discord.app_commands.allowed_contexts(guilds = True)
@@ -522,5 +525,36 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.followup.send(f":white_check_mark: <@{user.id}> was unbanned from {guild.name}")
     embed.set_footer(text=f"Action performed by @{interaction.user.name} - {interaction.user.id}", icon_url=interaction.user.display_avatar.url)
     await channel.send(embed=embed)
+
+@client.tree.command(name="delete-msg", description="📦 Delete a message manually", guild=discord.Object(id=banner_cmd_guild_id))
+@discord.app_commands.allowed_contexts(guilds = True)
+async def delete_msg_cmd(interaction:discord.Interaction, message_url:str):
+    global banner_log_channel_id
+    log_channel = client.get_channel(banner_log_channel_id)
+    if interaction.user.id in banner_admins:
+        try:
+            channel = await client.fetch_channel(int(message_url.split("/")[-2]))
+            message = await channel.fetch_message(int(message_url.split("/")[-1]))
+            await message.delete()
+        except Exception as e:
+            await interaction.response.send_message(f":x: Failed to delete message: `{e}`")
+            embed = discord.Embed(
+                title="<:boxg:1502150406523064401> Logs ︱ Failed to delete message",
+                description=f"Failed to manually delete a message! - <t:{int(time.time())}:f>\n\n`Message URL: {message_url}`\n`Error: {e}`",
+                color=0xD42A2A
+            )
+            await log_channel.send(embed=embed)
+        else:
+            await interaction.response.send_message(f":white_check_mark: Message deleted successfully.")
+            embed = discord.Embed(
+                title=f"<:boxg:1502150406523064401> Logs ︱ Message manually deleted by {interaction.user.name}",
+                description=f"Manually deleted a message! - <t:{int(time.time())}:f>\n\n`Message URL: {message_url}`",
+                color=0x4CD42A
+            )
+            if client.intents.message_content:
+                embed.add_field(name="Message content", value=f"`{message.content if message.content else '(No content)'}`"+(f'+{len(message.attachments)} attachments' if message.attachments else ''), inline=False)
+            await log_channel.send(embed=embed)
+    else:
+        await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 client.run(TOKEN)
