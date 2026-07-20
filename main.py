@@ -218,7 +218,7 @@ class Client(commands.Bot):
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
         embed = discord.Embed(
-            title="<:boxg:1502150406523064401> Logs ︱ Honeypot Triggered",
+            title="💠 Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
             color=0xD4C32A
         )
@@ -481,13 +481,13 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
     except:
         embed = discord.Embed(
-            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+            title="💠 Logs ︱ Failed to unban user",
             description=f"Failed to automatically unban {member.name} (<@{member.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0xD42A2A
         )
     else:
         embed = discord.Embed(
-            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+            title="💠 Logs ︱ User unbanned",
             description=f"Automatically unbanned {member.name} (<@{member.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0x4CD42A
         )
@@ -511,14 +511,14 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
     except:
         embed = discord.Embed(
-            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+            title="💠 Logs ︱ Failed to unban user",
             description=f"Failed to manually unban <@{user.id}>! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0xD42A2A
         )
-        await interaction.followup.send(f":x: Failed fo unban <@{user.id}> from {guild.name}")
+        await interaction.followup.send(f":x: Failed to unban <@{user.id}> from {guild.name}")
     else:
         embed = discord.Embed(
-            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+            title="💠 Logs ︱ User unbanned",
             description=f"Manually unbanned (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0x4CD42A
         )
