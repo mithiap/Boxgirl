@@ -248,7 +248,7 @@ class Client(commands.Bot):
             )
         else:
             embed = discord.Embed(
-                title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
+                title="💠 Logs ︱ User unbanned",
                 description=f"Automatically unbanned {msg.author.name} (<@{msg.author.id}>) after 15 minutes! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
                 color=0x4CD42A
             )
@@ -305,7 +305,7 @@ async def catch_up_cmd(interaction:discord.Interaction):
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
 
 @client.tree.command(name="banner", description="Set the banner for the bot")
-@discord.app_commands.describe(banner="Set the banner for the bot - Please choose a SMM:WE related image (max 10 MB)")
+@discord.app_commands.describe(banner="Choose a banner for the bot (max 10 MB)")
 @discord.app_commands.allowed_contexts(guilds = True, dms = True)
 async def set_banner_cmd(interaction:discord.Interaction, banner:discord.Attachment):
     global banner_change_date
@@ -481,13 +481,13 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
     except:
         embed = discord.Embed(
-            title="💠 Logs ︱ Failed to unban user",
+            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
             description=f"Failed to automatically unban {member.name} (<@{member.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0xD42A2A
         )
     else:
         embed = discord.Embed(
-            title="💠 Logs ︱ User unbanned",
+            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
             description=f"Automatically unbanned {member.name} (<@{member.id}>) after 5 seconds! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`",
             color=0x4CD42A
         )
