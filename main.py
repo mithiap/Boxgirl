@@ -1,4 +1,3 @@
-from discord import message
 from discord.ext import commands
 from dotenv import load_dotenv
 import asyncio
@@ -152,16 +151,25 @@ async def online_to_offline():
     last_msg_id = new_msg.id
     update_db()
 
+async def log(msg:str, channel:discord.TextChannel = None):
+    print(msg)
+    if channel:
+        await channel.send(f"{msg}")
+
 class Client(commands.Bot):
     async def on_ready(self):
         global online
-        global honey_eaten
-        print(f"{self.user.name} online")
+        log("Fetching log channel...")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         self.hw_channel:discord.TextChannel = self.get_channel(greet_channel_id)
+        log("Booting up...", self.hw_channel)
+        log("Syncing global command tree...", self.hw_channel)
         await self.tree.sync()
+        log("Syncing private command tree...", self.hw_channel)
         await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
-        await self.hw_channel.send("Hello world!")
+        log("Finished!", self.hw_channel)
+        await self.hw_channel.send("## Hello world!")
+        print(f"{self.user.name} online")
         if online:
             await client.change_presence(
                 status=discord.Status.online,
@@ -242,7 +250,7 @@ class Client(commands.Bot):
             await msg.author.unban(reason="Baneo temporal del bait de #the-thing finalizado.")
         except:
             embed = discord.Embed(
-                title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
+                title="💠 Logs ︱ Failed to unban user",
                 description=f"Failed to automatically unban {msg.author.name} (<@{msg.author.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`",
                 color=0xD42A2A
             )
@@ -498,7 +506,6 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
 @discord.app_commands.allowed_contexts(guilds = True)
 async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
     global log_channel_id
-    global honey_eaten
     
     guild = client.get_channel(log_channel_id).guild
     user = discord.Object(id=int(user_id))
@@ -511,14 +518,14 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await guild.unban(user, reason="Baneo temporal del bait de #the-thing finalizado.")
     except:
         embed = discord.Embed(
-            title="💠 Logs ︱ Failed to unban user",
+            title="<:boxg:1502150406523064401> Logs ︱ Failed to unban user",
             description=f"Failed to manually unban <@{user.id}>! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0xD42A2A
         )
         await interaction.followup.send(f":x: Failed to unban <@{user.id}> from {guild.name}")
     else:
         embed = discord.Embed(
-            title="💠 Logs ︱ User unbanned",
+            title="<:boxg:1502150406523064401> Logs ︱ User unbanned",
             description=f"Manually unbanned (<@{user.id}>)! - <t:{int(time.time())}:f>\n\n`ID: {user.id}`",
             color=0x4CD42A
         )
