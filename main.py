@@ -159,15 +159,15 @@ async def log(msg:str, channel:discord.TextChannel = None):
 class Client(commands.Bot):
     async def on_ready(self):
         global online
-        log("Fetching log channel...")
+        await log("Fetching log channel...")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         self.hw_channel:discord.TextChannel = self.get_channel(greet_channel_id)
-        log("Booting up...", self.hw_channel)
-        log("Syncing global command tree...", self.hw_channel)
+        await log("Booting up...", self.hw_channel)
+        await log("Syncing global command tree...", self.hw_channel)
         await self.tree.sync()
-        log("Syncing private command tree...", self.hw_channel)
+        await log("Syncing private command tree...", self.hw_channel)
         await self.tree.sync(guild=discord.Object(id=banner_cmd_guild_id))
-        log("Finished!", self.hw_channel)
+        await log("Finished!", self.hw_channel)
         await self.hw_channel.send("## Hello world!")
         print(f"{self.user.name} online")
         if online:
