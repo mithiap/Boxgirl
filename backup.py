@@ -79,10 +79,10 @@ async def log(msg:str, channel:discord.TextChannel = None):
 class Client(commands.Bot):
     async def on_ready(self):
         global online
-        log("[Backup] Fetching log channel...")
+        await log("[Backup] Fetching log channel...")
         self.log_channel:discord.TextChannel = self.get_channel(log_channel_id)
         self.hw_channel:discord.TextChannel = self.get_channel(greet_channel_id)
-        log("[Backup] Finished!", self.hw_channel)
+        await log("[Backup] Finished!", self.hw_channel)
         await self.hw_channel.send("## Hello world!\n-# 🛠️ Backup instance")
         print(f"{self.user.name} online")
 
