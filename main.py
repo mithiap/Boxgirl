@@ -1,5 +1,6 @@
 from discord.ext import commands
 from dotenv import load_dotenv
+import requests
 import asyncio
 import discord
 import redis
@@ -12,6 +13,10 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 REDIS_URL = os.getenv("REDIS_URL")
+WIDG_TOKEN = os.getenv("WIDG_TOKEN")
+WIDG_APPID = os.getenv("WIDG_APPID")
+WIDG_USR = os.getenv("WIDG_USR")
+WIDG_URL = os.getend("WIDG_URL")
 
 variables:dict = json.load(open("./vars.json", "r"))
 
@@ -62,6 +67,26 @@ Hola $username$, tu cuenta ha sido expulsada temporalmente de **$guild_name$** d
 https://discord.gg/n4JdZbCunR
 """
 # actual code
+
+class Widget:
+    def __init__(self):
+        self.token = None
+        self.app_id = None
+    def auth(self, token:str, app_id:int):
+        self.token = token
+        self.app_id = app_id
+    def update(self, data:str, user_id:int):
+        url = f"https://discord.com/api/v9/applications/{self.app_id}/users/{user_id}/identities/0/profile"
+        headers = {
+            "Content-Type":"application/json",
+            "Authorization":f"Bot {self.token}",
+            "User-Agent":"DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"
+        }
+        resp = requests.patch(url, data=data, headers=headers)
+        return resp
+
+widget = Widget()
+widget.auth(WIDG_TOKEN, WIDG_APPID)
 
 def update_db():
     global last_msg_id
@@ -114,6 +139,11 @@ def update_vars():
 
     if client and client.log_channel and client.log_channel.id != log_channel_id:
         client.log_channel = client.get_channel(log_channel_id)
+
+def update_widget(amount:int):
+    data:str = json.dumps(json.loads(requests.get(WIDG_URL).content.decode().replace("$honey_eaten$", "~"+str(amount))))
+    resp = widget.update(data, WIDG_USR)
+    return resp.status_code == 204
 
 async def offline_to_online():
     global online
@@ -225,6 +255,8 @@ class Client(commands.Bot):
 
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
+        if honey_eaten % 50 == 0:
+            widupdate = update_widget(honey_eaten)
         embed = discord.Embed(
             title="💠 Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
@@ -261,6 +293,8 @@ class Client(commands.Bot):
                 color=0x4CD42A
             )
         await channel.send(embed=embed)
+        if widupdate:
+            await channel.send(f"<@{WIDG_USR}> Your widget was updated!")
 
 
 intents = discord.Intents.default()
@@ -472,6 +506,8 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
+        if honey_eaten % 50 == 0:
+            widupdate = update_widget(honey_eaten)
     embed = discord.Embed(
         title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by {interaction.user.name}",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
@@ -501,6 +537,8 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         )
     embed.set_footer(text=f"Action performed by @{interaction.user.name} - {interaction.user.id}", icon_url=interaction.user.display_avatar.url)
     await channel.send(embed=embed)
+    if widupdate:
+        await channel.send(f"<@{WIDG_USR}> Your widget was updated!")
 
 @client.tree.command(name="unban", description="📦 Unban an user from Engine Kingdom", guild=discord.Object(id=banner_cmd_guild_id))
 @discord.app_commands.allowed_contexts(guilds = True)
