@@ -16,7 +16,7 @@ REDIS_URL = os.getenv("REDIS_URL")
 WIDG_TOKEN = os.getenv("WIDG_TOKEN")
 WIDG_APPID = os.getenv("WIDG_APPID")
 WIDG_USR = os.getenv("WIDG_USR")
-WIDG_URL = os.getend("WIDG_URL")
+WIDG_URL = os.getenv("WIDG_URL")
 
 variables:dict = json.load(open("./vars.json", "r"))
 
