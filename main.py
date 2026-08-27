@@ -255,8 +255,7 @@ class Client(commands.Bot):
 
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
-        if honey_eaten % 50 == 0:
-            widupdate = update_widget(honey_eaten)
+        widupdate = update_widget(honey_eaten)
         embed = discord.Embed(
             title="💠 Logs ︱ Honeypot Triggered",
             description=f"{msg.author.name} (<@{msg.author.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {msg.author.id}`\nBans performed: `{honey_eaten}`",
@@ -506,8 +505,7 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         await interaction.followup.send(f":white_check_mark: Successfully banned `{member.name}`")
         redis_db.incr("honey_eaten")
         honey_eaten = int(redis_db.get("honey_eaten"))
-        if honey_eaten % 50 == 0:
-            widupdate = update_widget(honey_eaten)
+        widupdate = update_widget(honey_eaten)
     embed = discord.Embed(
         title=f"<:boxg:1502150406523064401> Logs ︱ Manual softban by {interaction.user.name}",
         description=f"{member.name} (<@{member.id}>) was banned! - <t:{int(time.time())}:f>\n\n`ID: {member.id}`\nBans performed: `{honey_eaten}`",
