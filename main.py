@@ -292,8 +292,6 @@ class Client(commands.Bot):
                 color=0x4CD42A
             )
         await channel.send(embed=embed)
-        if widupdate:
-            await channel.send(f"<@{WIDG_USR}> Your widget was updated!")
 
 
 intents = discord.Intents.default()
@@ -535,8 +533,6 @@ async def banner_unban_cmd(interaction:discord.Interaction, user_id:str):
         )
     embed.set_footer(text=f"Action performed by @{interaction.user.name} - {interaction.user.id}", icon_url=interaction.user.display_avatar.url)
     await channel.send(embed=embed)
-    if widupdate:
-        await channel.send(f"<@{WIDG_USR}> Your widget was updated!")
 
 @client.tree.command(name="unban", description="📦 Unban an user from Engine Kingdom", guild=discord.Object(id=banner_cmd_guild_id))
 @discord.app_commands.allowed_contexts(guilds = True)
