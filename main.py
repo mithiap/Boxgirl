@@ -141,7 +141,7 @@ def update_vars():
         client.log_channel = client.get_channel(log_channel_id)
 
 def update_widget(amount:int):
-    data:str = json.dumps(json.loads(requests.get(WIDG_URL).content.decode().replace("$honey_eaten$", "~"+str(amount))))
+    data:str = json.dumps(json.loads(requests.get(WIDG_URL).content.decode().replace("$honey_eaten$", str(amount))))
     resp = widget.update(data, WIDG_USR)
     return resp.status_code == 204
 
