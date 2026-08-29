@@ -262,7 +262,7 @@ class Client(commands.Bot):
             color=0xD4C32A
         )
         if client.intents.message_content:
-            embed.add_field(name="Message content", value=f"`{msg.content if msg.content else '(No content)'}`"+(f'+{len(msg.attachments)} attachments' if msg.attachments else ''), inline=False)
+            embed.add_field(name="Message content", value=f"`{msg.content if msg.content else '(No content)'}`"+(f'\n+{len(msg.attachments)} attachments' if msg.attachments else ''), inline=False)
 
         for channel_id in honeypot_delete_channels:
             channel = self.get_channel(channel_id)
@@ -591,7 +591,7 @@ async def delete_msg_cmd(interaction:discord.Interaction, message_url:str):
                 color=0x4CD42A
             )
             if client.intents.message_content:
-                embed.add_field(name="Message content", value=f"`{message.content if message.content else '(No content)'}`"+(f'+{len(message.attachments)} attachments' if message.attachments else ''), inline=False)
+                embed.add_field(name="Message content", value=f"`{message.content if message.content else '(No content)'}`"+(f'\n+{len(message.attachments)} attachments' if message.attachments else ''), inline=False)
             await log_channel.send(embed=embed)
     else:
         await interaction.response.send_message(f":no_entry: You don't have permission to use this command\n-# Are you trying to make an account? use **</setup:1199514841363255340>**.", ephemeral=True)
